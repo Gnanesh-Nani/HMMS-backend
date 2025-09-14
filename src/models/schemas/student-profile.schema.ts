@@ -22,19 +22,19 @@ export class StudentProfile {
   @Prop({ required: true })
   year: number;
 
-  @Prop()
+  @Prop({ type: [String], default: [] })
   dob: Date;
 
   @Prop([String])
   contacts: string[];
 
-  @Prop()
+  @Prop({default: null})
   fathersName: string;
 
-  @Prop()
+  @Prop({default: null})
   address: string;
 
-  @Prop()
+  @Prop({default: null})
   mailId: string;
 }
 

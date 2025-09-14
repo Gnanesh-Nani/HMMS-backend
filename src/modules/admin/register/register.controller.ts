@@ -3,7 +3,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { RegisterSingleDto } from 'src/models/dtos/register-single.dto';
 import { RegisterService } from 'src/models/services/admin/register.service';
 
-@Controller('register')
+@Controller('admin/register')
 export class RegisterController {
 
     constructor(
