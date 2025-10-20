@@ -79,13 +79,11 @@ export class RoomService {
     }
 
     async allocateStudent(roomId:string,studentId:string){
-        Logger.debug(roomId,studentId)
         const room = await this.roomModel.findById(roomId);
         if(!room)
             handleError("No room found for this Id to allocat")
 
         const student = await this.studentProfileModel.findById(studentId);
-        Logger.debug(student)
         if(!student)
             handleError("No student found for this Id to allocate")
         await this.roomModel.findByIdAndUpdate(

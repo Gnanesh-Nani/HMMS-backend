@@ -17,7 +17,6 @@ export class Room {
     @Prop({required:true})
     maxCapacity: number;
 
-
     @Prop({required:true})
     floorNo: number;
 

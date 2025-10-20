@@ -11,6 +11,10 @@ import { Room, RoomSchema } from './schemas/room.schema';
 import { HostelService } from './services/admin/hostel.service';
 import { BlockService } from './services/admin/block.service';
 import { RoomService } from './services/admin/room.service';
+import { MealPlanService } from './services/admin/meal-plan.service';
+import { MealPlan, MealPlanSchema } from './schemas/meal-plan.schema';
+import { Notification, NotificationSchmea } from './schemas/notification.schema';
+
 
 @Module({
   imports: [
@@ -18,10 +22,12 @@ import { RoomService } from './services/admin/room.service';
                                 { name: StudentProfile.name, schema: StudentProfileSchema },
                                 { name: Hostel.name, schema: HostelSchema},
                                 { name: Block.name, schema: BlockSchema}, 
-                                { name: Room.name, schema: RoomSchema}
+                                { name: Room.name, schema: RoomSchema},
+                                {name: MealPlan.name,schema: MealPlanSchema},
+                                {name: Notification.name, schema: NotificationSchmea}
                               ]),
   ],
-  providers: [AuthService,RegisterService,JwtService,HostelService,BlockService,RoomService],
+  providers: [AuthService,RegisterService,JwtService,HostelService,BlockService,RoomService,MealPlanService],
   exports: [AuthService, 
     MongooseModule,
     RegisterService

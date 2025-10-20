@@ -16,4 +16,8 @@ export class CreateHostelDto {
     @IsString()
     @IsNotEmpty()
     desciption:string;
+
+    @IsString()
+    @IsNotEmpty()
+    mealPlan:string;
 }
