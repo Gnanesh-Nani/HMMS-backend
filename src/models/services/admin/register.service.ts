@@ -1,7 +1,7 @@
 import { Body, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { User, UserDocument } from "src/models/schemas/user.schema";
-import { StudentProfile, StudentProfileSchema } from "src/models/schemas/student-profile.schema";
+import { StudentProfile, StudentProfileDocument } from "src/models/schemas/student-profile.schema";
 import { Model } from "mongoose";
 import * as bcrypt from 'bcrypt';
 import * as fs from 'fs';
@@ -13,7 +13,7 @@ export class RegisterService {
 
     constructor(
         @InjectModel(User.name) private userModel: Model<UserDocument>,
-        @InjectModel(StudentProfile.name) private studentProfileModel: Model<StudentProfile>,
+        @InjectModel(StudentProfile.name) private studentProfileModel: Model<StudentProfileDocument>,
     ) { }
 
     async registerSingle(@Body() body: RegisterSingleDto) {
@@ -86,7 +86,6 @@ export class RegisterService {
 
                 result.success++;
             } catch (err) {
-                console.log(err)
                 result.failed.push(registerNo);
             }
         }

@@ -13,10 +13,16 @@ import { ModulesModule } from './modules/modules.module';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
+      useFactory: async (configService: ConfigService) => {
         const uri = configService.get<string>('MONGO_URI');
         Logger.log(`Connecting to MongoDB at ${uri}`, 'Mongoose');
-        return { uri };
+        return {
+          uri,
+          connectionFactory: (connection) => {
+            Logger.debug(`✅ Successfully connected to MongoDB`, 'Mongoose');
+            return connection;
+          },
+        };
       },
     }),
 

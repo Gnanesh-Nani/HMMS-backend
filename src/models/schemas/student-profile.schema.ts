@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import * as mongoose from 'mongoose';
 import { User } from './user.schema';
+import { applyDefaultToJSON } from 'src/utils/schema-transformer.utils';
 
 export type StudentProfileDocument = StudentProfile & Document;
 
@@ -39,3 +40,4 @@ export class StudentProfile {
 }
 
 export const StudentProfileSchema = SchemaFactory.createForClass(StudentProfile);
+applyDefaultToJSON(StudentProfileSchema)

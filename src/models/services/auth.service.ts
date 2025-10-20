@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { loginDto } from '../dtos/login.dto';
@@ -6,16 +6,19 @@ import * as bcrypt from 'bcrypt';
 import { User, UserDocument } from 'src/models/schemas/user.schema';
 import { changePasswordDto } from '../dtos/change-password.dto';
 import { StudentProfile } from '../schemas/student-profile.schema';
+import { Response } from 'express';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
 
     constructor(
         @InjectModel(User.name) private userModel: Model<UserDocument>,
-        @InjectModel(StudentProfile.name) private studentProfileModel: Model<StudentProfile>
+        @InjectModel(StudentProfile.name) private studentProfileModel: Model<StudentProfile>,
+        private jwtService: JwtService
     ) { }
 
-    async login(body: loginDto) {
+    async login(body: loginDto,res: Response) {
         const user = await this.userModel.findOne({ registerNo: body.reg_no });
         if (!user) {
             return { error: true, message: 'User not found' };
@@ -26,6 +29,13 @@ export class AuthService {
         }
         const profile = await this.studentProfileModel.findOne({ user: user._id })
                         .select('name gender department year contacts -_id');
+        
+        const payload = {sub: user._id, email: profile?.mailId}
+
+        const accessToken = this.jwtService.sign(payload,{expiresIn:'1h'})
+
+        res.setHeader('Set-Cookie', `jwt=${accessToken}; HttpOnly; Path=/; Max-Age=3600; SameSite=Lax`);
+
         const safeUser = {
             registerNo: user.registerNo,
             role: user.role,

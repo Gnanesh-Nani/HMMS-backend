@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { applyDefaultToJSON } from 'src/utils/schema-transformer.utils';
 
 export type UserDocument = User & Document;
 
@@ -19,3 +20,4 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+applyDefaultToJSON(UserSchema)
