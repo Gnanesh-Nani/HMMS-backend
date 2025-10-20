@@ -6,15 +6,20 @@ import { applyDefaultToJSON } from 'src/utils/schema-transformer.utils';
 
 export type StudentProfileDocument = StudentProfile & Document;
 
+export enum GENDERS {
+  MALE  = 'male',
+  FEMAL = 'female'
+}
+
 @Schema()
 export class StudentProfile {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true })
-  user: User;
+  userId: User;
 
   @Prop({ required: true })
   name: string;
 
-  @Prop({ required: true, enum: ['male', 'female'] })
+  @Prop({ required: true, enum: GENDERS })
   gender: string;
 
   @Prop({ required: true })
@@ -23,7 +28,7 @@ export class StudentProfile {
   @Prop({ required: true })
   year: number;
 
-  @Prop({ type: [String], default: [] })
+  @Prop({ type: Date, default: null})
   dob: Date;
 
   @Prop([String])
