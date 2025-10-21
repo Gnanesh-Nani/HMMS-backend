@@ -32,7 +32,7 @@ export class AuthService {
         const profile = await this.studentProfileModel.findOne({ userId: user._id })
                         // .select('name gender department year contacts -_id');
         
-        const payload = {sub: user._id, email: profile?.mailId}
+        const payload = {sub: user._id, registerNo: user.registerNo , role: user.role}
 
         const accessToken = this.jwtService.sign(payload,{
             secret: this.configService.get('JWT_SECRET_KEY'),
