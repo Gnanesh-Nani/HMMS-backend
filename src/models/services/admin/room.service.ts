@@ -45,7 +45,7 @@ export class RoomService {
         const blockMaxFloor = block.totalFloors;
 
         if(createRoomDto.floorNo < 0 || createRoomDto.floorNo >= blockMaxFloor )
-            return handleError(`Invalid floor Number it should be lie in the range of 0 - ${blockMaxFloor}`);
+            return handleError(`Invalid floor Number, For the Selected Block, floor Number should lie in the range of 0 - ${blockMaxFloor-1}`);
 
         const newRoom = new this.roomModel({blockId, ...createRoomDto})
 
@@ -55,8 +55,7 @@ export class RoomService {
     }
 
     async updateRoom(roomId:string,createRoomDto: Partial<CreateRoomDto>) {
-        Logger.log("update rooom endpoint hitted")
-        Logger.log(roomId,createRoomDto)
+
         const room = await this.roomModel.findById(roomId);
         if(!room)
             handleError("No room found for this Id");
@@ -81,13 +80,21 @@ export class RoomService {
     async allocateStudent(roomId:string,studentId:string){
         const room = await this.roomModel.findById(roomId);
         if(!room)
-            handleError("No room found for this Id to allocat")
+            return handleError("No room found for this Id to allocat")
 
         const student = await this.studentProfileModel.findById(studentId);
         if(!student)
-            handleError("No student found for this Id to allocate")
+            return handleError("No student found for this Id to allocate")
+
+        const studentExists = room.currentStudents.some(
+            (id: any) => id.toString() === studentId
+        );
+
+        if (studentExists) {
+            return handleError("This Student is already allocated to this room");
+        }
         await this.roomModel.findByIdAndUpdate(
-            roomId, {$push:{ currentStudents: studentId }}
+            roomId, {$addToSet:{ currentStudents: studentId }}
         );
         return handleResponse({},"students inserted Sucessfully")
     }
@@ -96,11 +103,20 @@ export class RoomService {
     async removeStudent(roomId:string,studentId:string){
         const room = await this.roomModel.findById(roomId);
         if(!room)
-            handleError("No room found for this Id to allocat")
+            return handleError("No room found for this Id to allocat")
 
         const student = await this.studentProfileModel.findById(studentId);
         if(!student)
-            handleError("No student found for this Id to allocate")
+            return handleError("No student found for this Id to allocate")
+
+        const studentExists = room.currentStudents.some(
+            (id: any) => id.toString() === studentId
+        );
+
+        if (!studentExists) {
+            handleError("Student is not allocated to this room");
+        }
+
         await this.roomModel.findByIdAndUpdate(
             roomId, {$pull:{ currentStudents: studentId }}
         );

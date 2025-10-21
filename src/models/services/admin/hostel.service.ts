@@ -15,7 +15,7 @@ export class HostelService {
     async getAllHostel() {
         const hostels = await this.hostelModel.find()
         
-        if(!hostels){
+        if(hostels.length == 0) {
             handleError("No Hostels Found")
         }
         

@@ -32,7 +32,7 @@ export class RegisterService {
         const savedUser = await newUser.save();
 
         const newStudentProfile = new this.studentProfileModel({
-            user: savedUser._id,
+            userId: savedUser._id,
             name: body.name,
             year: body.year,
             gender: body.gender,
@@ -55,14 +55,14 @@ export class RegisterService {
 
         const rows = parsed.data as Record<string, string>[];
 
-        const result: { success: number, failed: string[] } = { success: 0, failed: [] };
+        const result: { success: number, failed : {registerNo:string,message:string}[] } = { success: 0, failed: [] };
 
         for (const row of rows) {
             const { registerNo, name, password, year, gender, department, role } = row;
             try {
                 const existing = await this.userModel.findOne({ registerNo: registerNo });
                 if (existing) {
-                    result.failed.push(registerNo);
+                    result.failed.push({registerNo, message: "User already exists"});
                     continue;
                 }
                 const salt = await bcrypt.genSalt();
@@ -76,7 +76,7 @@ export class RegisterService {
                 const savedUser = await user.save();
 
                 const profile = new this.studentProfileModel({
-                    user: savedUser._id,
+                    userId: savedUser._id,
                     name,
                     gender,
                     department,
@@ -86,7 +86,7 @@ export class RegisterService {
 
                 result.success++;
             } catch (err) {
-                result.failed.push(registerNo);
+                result.failed.push({ registerNo, message: err.message });
             }
         }
 

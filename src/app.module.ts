@@ -5,10 +5,16 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ModelsModule } from './models/models.module';
 import { ModulesModule } from './modules/modules.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtGuard } from './common/guards/auth.guard';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ 
+      isGlobal: true ,
+      envFilePath: '.env'
+    }),
 
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
@@ -30,6 +36,14 @@ import { ModulesModule } from './modules/modules.module';
     ModulesModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    JwtService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtGuard
+    }
+
+  ],
 })
 export class AppModule {}
