@@ -28,7 +28,7 @@ export class Hostel {
     @Prop({required: true})
     description:string;
     
-    @Prop({type:mongoose.Schema.Types.ObjectId,ref:'MealPlan',required:true})
+    @Prop({type:mongoose.Schema.Types.ObjectId,ref:MealPlan.name ,required:true})
     mealPlan: MealPlan
 }
 

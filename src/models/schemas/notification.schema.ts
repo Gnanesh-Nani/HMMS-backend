@@ -26,10 +26,10 @@ export class Notification {
     @Prop({enum:['boys','girls'],required:false})
     gender?:string
 
-    @Prop({type:Types.ObjectId,ref:'Hostel',required:false})
+    @Prop({type:Types.ObjectId,ref:Hostel.name,required:false})
     hostelId?:Hostel
 
-    @Prop({type:Types.ObjectId,ref:'StudentProfile',required:false})
+    @Prop({type:Types.ObjectId,ref:StudentProfile.name,required:false})
     studentProfileId?:StudentProfile
 
     @Prop({default:false})

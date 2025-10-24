@@ -17,6 +17,7 @@ import { Notification, NotificationSchmea } from './schemas/notification.schema'
 import { StudentService } from './services/student/student.service';
 import { MailService } from './services/mail.service';
 import { OtpService } from './services/otp.service';
+import { Payment, PaymentSchema } from './schemas/payment.schema';
 
 
 @Module({
@@ -27,7 +28,8 @@ import { OtpService } from './services/otp.service';
                                 { name: Block.name, schema: BlockSchema}, 
                                 { name: Room.name, schema: RoomSchema},
                                 {name: MealPlan.name,schema: MealPlanSchema},
-                                {name: Notification.name, schema: NotificationSchmea}
+                                {name: Notification.name, schema: NotificationSchmea},
+                                {name: Payment.name, schema: PaymentSchema}
                               ]),
   ],
   providers: [AuthService,RegisterService,JwtService,HostelService,BlockService,RoomService,MealPlanService,StudentService,MailService,OtpService],

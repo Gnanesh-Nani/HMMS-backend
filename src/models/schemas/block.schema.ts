@@ -7,7 +7,7 @@ export type BlockDocument = Block & Document
 
 @Schema()
 export class Block {
-    @Prop({type:mongoose.Schema.Types.ObjectId,ref:'Hostel',required: true})
+    @Prop({type:mongoose.Schema.Types.ObjectId,ref:Hostel.name,required: true})
     hostelId: Hostel
 
     @Prop({required: true})

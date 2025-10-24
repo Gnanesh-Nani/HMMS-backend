@@ -13,7 +13,7 @@ export enum GENDERS {
 
 @Schema()
 export class StudentProfile {
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: User.name , required: true })
   userId: User;
 
   @Prop({ required: true })

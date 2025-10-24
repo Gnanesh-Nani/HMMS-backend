@@ -9,7 +9,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtGuard } from './common/guards/auth.guard';
 import { JwtService } from '@nestjs/jwt';
 import { RoleGuard } from './common/guards/role.guard';
-import { OtpModule } from './otp/otp.module';
+import { OtpModule } from './modules/otp/otp.module';
 
 @Module({
   imports: [

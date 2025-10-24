@@ -31,6 +31,10 @@ export class AuthService {
         if (!isMatch) {
             return { error: true, message: 'Invalid credentials' };
         }
+        if(user.isFirstLogin) {
+            user.isFirstLogin = false;
+            await user.save();
+        }
         const profile = await this.studentProfileModel.findOne({ userId: user._id })
                         // .select('name gender department year contacts -_id');
         

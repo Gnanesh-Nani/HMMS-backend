@@ -58,7 +58,7 @@ export class RegisterService {
         const result: { success: number, failed : {registerNo:string,message:string}[] } = { success: 0, failed: [] };
 
         for (const row of rows) {
-            const { registerNo, name, password, year, gender, department, role } = row;
+            const { registerNo, name, password, year, gender, department, role , mailId} = row;
             try {
                 const existing = await this.userModel.findOne({ registerNo: registerNo });
                 if (existing) {
@@ -81,6 +81,7 @@ export class RegisterService {
                     gender,
                     department,
                     year: parseInt(year, 10),
+                    mailId
                 });
                 await profile.save();
 

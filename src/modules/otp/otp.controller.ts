@@ -19,4 +19,12 @@ export class OtpController {
   ) {
     return this.otpService.verifyOtp(id, otp);
   }
+
+  @Post('change-password/:userId')
+  async changePassword(
+    @Param('userId') userId: string,
+    @Body('newPassword') newPassword: string,
+  ) {
+    return this.otpService.changePassword(userId, newPassword);
+  }
 }

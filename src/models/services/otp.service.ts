@@ -6,6 +6,8 @@ import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { handleError } from 'src/utils/handle-error';
 import { handleResponse } from 'src/utils/response.utils';
+import { User, UserDocument } from '../schemas/user.schema';
+import * as bcrypt from 'bcrypt';
 
 interface OtpStore {
   [key: string]: { otp: string; expiresAt: number };
@@ -16,7 +18,8 @@ export class OtpService {
 
   constructor(
     @Inject(MailService) private mailService: MailService,
-    @InjectModel(StudentProfile.name) private studentProfileModel: Model<StudentProfile>
+    @InjectModel(StudentProfile.name) private studentProfileModel: Model<StudentProfile>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
   ){}
   private otpStore: OtpStore = {};
 
@@ -61,7 +64,20 @@ export class OtpService {
         return handleError("Invalid Otp");
     }
 
-    delete this.otpStore[studentProfileId]; 
+    // delete this.otpStore[studentProfileId]; 
     return handleResponse({},"Otp Verified Sucessfully");
   }
+
+  async changePassword(userId: string, newPassword: string) {
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+        return { error: true, message: 'User not found' };
+    }
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    user.password = hashedPassword;
+    await user.save();
+    return handleResponse({},"Password Changed Sucessfully");
+  }
+
 }
