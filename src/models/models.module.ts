@@ -15,6 +15,8 @@ import { MealPlanService } from './services/admin/meal-plan.service';
 import { MealPlan, MealPlanSchema } from './schemas/meal-plan.schema';
 import { Notification, NotificationSchmea } from './schemas/notification.schema';
 import { StudentService } from './services/student/student.service';
+import { MailService } from './services/mail.service';
+import { OtpService } from './services/otp.service';
 
 
 @Module({
@@ -28,10 +30,11 @@ import { StudentService } from './services/student/student.service';
                                 {name: Notification.name, schema: NotificationSchmea}
                               ]),
   ],
-  providers: [AuthService,RegisterService,JwtService,HostelService,BlockService,RoomService,MealPlanService,StudentService],
+  providers: [AuthService,RegisterService,JwtService,HostelService,BlockService,RoomService,MealPlanService,StudentService,MailService,OtpService],
   exports: [AuthService, 
     MongooseModule,
-    RegisterService
+    RegisterService,
+    MailService
   ],
 })
 export class ModelsModule {}

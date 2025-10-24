@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { loginDto } from '../dtos/login.dto';
@@ -9,6 +9,7 @@ import { StudentProfile } from '../schemas/student-profile.schema';
 import { Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { MailService } from './mail.service';
 
 @Injectable()
 export class AuthService {
@@ -17,7 +18,8 @@ export class AuthService {
         @InjectModel(User.name) private userModel: Model<UserDocument>,
         @InjectModel(StudentProfile.name) private studentProfileModel: Model<StudentProfile>,
         private jwtService: JwtService,
-        private configService:ConfigService
+        private configService:ConfigService,
+        @Inject(MailService) private mailService: MailService
     ) { }
 
     async login(body: loginDto,res: Response) {
@@ -32,6 +34,11 @@ export class AuthService {
         const profile = await this.studentProfileModel.findOne({ userId: user._id })
                         // .select('name gender department year contacts -_id');
         
+        if(profile?.mailId) {
+            Logger.debug("Sending a testing mail",profile.mailId)
+            this.mailService.sendWelcomeMail(profile.mailId,profile.name)
+        }
+
         const payload = {sub: user._id, registerNo: user.registerNo , role: user.role}
 
         const accessToken = this.jwtService.sign(payload,{

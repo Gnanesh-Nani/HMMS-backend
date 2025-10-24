@@ -9,6 +9,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtGuard } from './common/guards/auth.guard';
 import { JwtService } from '@nestjs/jwt';
 import { RoleGuard } from './common/guards/role.guard';
+import { OtpModule } from './otp/otp.module';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { RoleGuard } from './common/guards/role.guard';
       isGlobal: true ,
       envFilePath: '.env'
     }),
-
+    
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -35,6 +36,7 @@ import { RoleGuard } from './common/guards/role.guard';
 
     ModelsModule,
     ModulesModule,
+    OtpModule,
   ],
   controllers: [AppController],
   providers: [

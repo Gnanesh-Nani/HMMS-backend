@@ -1,11 +1,10 @@
-import { Body, Controller, HttpCode, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, Param, Post, Query, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from 'src/models/services/auth.service';
 import { loginDto } from 'src/models/dtos/login.dto';
 import { changePasswordDto } from 'src/models/dtos/change-password.dto';
 import { Response } from 'express';
 import { Public } from 'src/common/decorators/public.decorator';
-import { Role } from 'src/common/decorators/roles.decorator';
-import { UserRoles } from 'src/common/enums/roles.enum';
+
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
