@@ -27,6 +27,15 @@ export class OtpService {
     const studentProfile = await this.studentProfileModel.findById(studentProfileId);
     if(!studentProfile)
         return handleError("No Student PRofle for this ID");
+    
+    const existingOtpData = this.otpStore[studentProfileId];
+    const now = Date.now();
+
+    if (existingOtpData && existingOtpData.expiresAt > now) {
+      const remainingSeconds = Math.ceil((existingOtpData.expiresAt - now) / 1000);
+      return handleError(`OTP already sent. Please Check the Email. Please wait ${remainingSeconds} seconds before requesting again.`);
+    }
+      
     const otp = otpGenerator.generate(6, {
       upperCaseAlphabets: false,
       specialChars: false,
