@@ -31,6 +31,7 @@ export class AuthService {
         if (!isMatch) {
             return { error: true, message: 'Invalid credentials' };
         }
+        const isFirstLogin = user.isFirstLogin;
         if(user.isFirstLogin) {
             user.isFirstLogin = false;
             await user.save();
@@ -40,7 +41,7 @@ export class AuthService {
         
         if(profile?.mailId) {
             Logger.debug("Sending a testing mail",profile.mailId)
-            this.mailService.sendWelcomeMail(profile.mailId,profile.name)
+            // this.mailService.sendWelcomeMail(profile.mailId,profile.name)
         }
 
         const payload = {sub: user._id, registerNo: user.registerNo , role: user.role}
@@ -55,7 +56,7 @@ export class AuthService {
         const safeUser = {
             registerNo: user.registerNo,
             role: user.role,
-            isFirstLogin: user.isFirstLogin
+            isFirstLogin: isFirstLogin
         };
         return { error: false, message: 'Login successful', data: { user:safeUser, profile} };
     }
