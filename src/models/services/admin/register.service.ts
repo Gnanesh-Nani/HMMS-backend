@@ -7,6 +7,7 @@ import * as bcrypt from 'bcrypt';
 import * as fs from 'fs';
 import * as Papa from 'papaparse';
 import { RegisterSingleDto } from "src/models/dtos/register-single.dto";
+import { UserRoles } from "src/common/enums/roles.enum";
 
 @Injectable()
 export class RegisterService {
@@ -27,7 +28,7 @@ export class RegisterService {
         const newUser = new this.userModel({
             registerNo: body.registerNo,
             password: hashedPassword,
-            role: body.role,
+            role: UserRoles.STUDENT,
         });
         const savedUser = await newUser.save();
 
@@ -44,6 +45,31 @@ export class RegisterService {
         return { error: false, message: 'User registered successfully' };
     }
 
+    async registerSingleAdmin(body:any){
+        const user = await this.userModel.findOne({ registerNo: body.registerNo });
+        if (user) {
+            return { error: true, message: 'User already exists' };
+        }
+        const salt = await bcrypt.genSalt();
+
+        const hashedPassword = await bcrypt.hash(body.password, salt);
+        const newUser = new this.userModel({
+            registerNo: body.registerNo,
+            password: hashedPassword,
+            role: UserRoles.ADMIN,
+        });
+        const savedUser = await newUser.save();
+
+        const newStudentProfile = new this.studentProfileModel({
+            userId: savedUser._id,
+            name: body.name,
+            gender: body.gender
+        });
+
+        await newStudentProfile.save();
+
+        return { error: false, message: 'User registered successfully' };
+    }
 
     async registerBulk(file: Express.Multer.File) {
         const fileContent = file.buffer.toString("utf8");
@@ -58,7 +84,7 @@ export class RegisterService {
         const result: { success: number, failed : {registerNo:string,message:string}[] } = { success: 0, failed: [] };
 
         for (const row of rows) {
-            const { registerNo, name, password, year, gender, department, role , mailId} = row;
+            const { registerNo, name, password, year, gender, department , mailId} = row;
             try {
                 const existing = await this.userModel.findOne({ registerNo: registerNo });
                 if (existing) {
@@ -71,7 +97,7 @@ export class RegisterService {
                 const user = new this.userModel({
                     registerNo: registerNo,
                     password: hashedPassword,
-                    role: role
+                    role: UserRoles.STUDENT
                 });
                 const savedUser = await user.save();
 
@@ -83,6 +109,7 @@ export class RegisterService {
                     year: parseInt(year, 10),
                     mailId
                 });
+
                 await profile.save();
 
                 result.success++;

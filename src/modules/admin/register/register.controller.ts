@@ -15,6 +15,11 @@ export class RegisterController {
         return this.registerService.registerSingle(body);
     }
 
+    @Post('admin')
+    async registerSingleAdmin(@Body() body) {
+        return this.registerService.registerSingleAdmin(body);
+    }
+
     @Post('bulk')
     @UseInterceptors(FileInterceptor('file'))
     async registerBulk(@UploadedFile() file: Express.Multer.File) {

@@ -18,6 +18,9 @@ import { StudentService } from './services/student/student.service';
 import { MailService } from './services/mail.service';
 import { OtpService } from './services/otp.service';
 import { Payment, PaymentSchema } from './schemas/payment.schema';
+import { Transaction, TransactionSchema } from './schemas/transaction.schema';
+import { StripeService } from './services/stripe.service';
+import { TransactionsService } from './services/transaction.service';
 
 
 @Module({
@@ -27,12 +30,13 @@ import { Payment, PaymentSchema } from './schemas/payment.schema';
                                 { name: Hostel.name, schema: HostelSchema},
                                 { name: Block.name, schema: BlockSchema}, 
                                 { name: Room.name, schema: RoomSchema},
-                                {name: MealPlan.name,schema: MealPlanSchema},
-                                {name: Notification.name, schema: NotificationSchmea},
-                                {name: Payment.name, schema: PaymentSchema}
+                                { name: MealPlan.name,schema: MealPlanSchema},
+                                { name: Notification.name, schema: NotificationSchmea},
+                                { name: Payment.name, schema: PaymentSchema},
+                                { name: Transaction.name, schema: TransactionSchema}
                               ]),
   ],
-  providers: [AuthService,RegisterService,JwtService,HostelService,BlockService,RoomService,MealPlanService,StudentService,MailService,OtpService],
+  providers: [AuthService,RegisterService,JwtService,HostelService,BlockService,RoomService,MealPlanService,StudentService,MailService,OtpService,StripeService,TransactionsService],
   exports: [AuthService, 
     MongooseModule,
     RegisterService,

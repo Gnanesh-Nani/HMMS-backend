@@ -22,10 +22,10 @@ export class StudentProfile {
   @Prop({ required: true, enum: GENDERS })
   gender: string;
 
-  @Prop({ required: true })
+  @Prop({default: null})
   department: string;
 
-  @Prop({ required: true })
+  @Prop({default:0})
   year: number;
 
   @Prop({ type: Date, default: null})
