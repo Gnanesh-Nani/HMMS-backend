@@ -2,27 +2,33 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import * as mongoose from 'mongoose';
 import { User } from './user.schema';
+import { applyDefaultToJSON } from 'src/utils/schema-transformer.utils';
 
 export type StudentProfileDocument = StudentProfile & Document;
 
+export enum GENDERS {
+  MALE  = 'male',
+  FEMAL = 'female'
+}
+
 @Schema()
 export class StudentProfile {
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true })
-  user: User;
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: User.name , required: true })
+  userId: User;
 
   @Prop({ required: true })
   name: string;
 
-  @Prop({ required: true, enum: ['male', 'female'] })
+  @Prop({ required: true, enum: GENDERS })
   gender: string;
 
-  @Prop({ required: true })
+  @Prop({default: null})
   department: string;
 
-  @Prop({ required: true })
+  @Prop({default:0})
   year: number;
 
-  @Prop({ type: [String], default: [] })
+  @Prop({ type: Date, default: null})
   dob: Date;
 
   @Prop([String])
@@ -39,3 +45,4 @@ export class StudentProfile {
 }
 
 export const StudentProfileSchema = SchemaFactory.createForClass(StudentProfile);
+applyDefaultToJSON(StudentProfileSchema)

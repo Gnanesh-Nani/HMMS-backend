@@ -5,25 +5,51 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ModelsModule } from './models/models.module';
 import { ModulesModule } from './modules/modules.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtGuard } from './common/guards/auth.guard';
+import { JwtService } from '@nestjs/jwt';
+import { RoleGuard } from './common/guards/role.guard';
+import { OtpModule } from './modules/otp/otp.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-
+    ConfigModule.forRoot({ 
+      isGlobal: true ,
+      envFilePath: '.env'
+    }),
+    
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
+      useFactory: async (configService: ConfigService) => {
         const uri = configService.get<string>('MONGO_URI');
         Logger.log(`Connecting to MongoDB at ${uri}`, 'Mongoose');
-        return { uri };
+        return {
+          uri,
+          connectionFactory: (connection) => {
+            Logger.debug(`✅ Successfully connected to MongoDB`, 'Mongoose');
+            return connection;
+          },
+        };
       },
     }),
 
     ModelsModule,
     ModulesModule,
+    OtpModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    JwtService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtGuard
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RoleGuard
+    }
+  ],
 })
 export class AppModule {}

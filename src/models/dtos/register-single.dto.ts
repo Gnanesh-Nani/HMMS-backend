@@ -23,9 +23,9 @@ export class RegisterSingleDto {
 
     @IsNotEmpty()
     @IsString()
-    role: string;
+    department: string;
 
     @IsNotEmpty()
     @IsString()
-    department: string;
+    role: string;
 }

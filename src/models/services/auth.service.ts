@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { loginDto } from '../dtos/login.dto';
@@ -6,16 +6,23 @@ import * as bcrypt from 'bcrypt';
 import { User, UserDocument } from 'src/models/schemas/user.schema';
 import { changePasswordDto } from '../dtos/change-password.dto';
 import { StudentProfile } from '../schemas/student-profile.schema';
+import { Response } from 'express';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { MailService } from './mail.service';
 
 @Injectable()
 export class AuthService {
 
     constructor(
         @InjectModel(User.name) private userModel: Model<UserDocument>,
-        @InjectModel(StudentProfile.name) private studentProfileModel: Model<StudentProfile>
+        @InjectModel(StudentProfile.name) private studentProfileModel: Model<StudentProfile>,
+        private jwtService: JwtService,
+        private configService:ConfigService,
+        @Inject(MailService) private mailService: MailService
     ) { }
 
-    async login(body: loginDto) {
+    async login(body: loginDto,res: Response) {
         const user = await this.userModel.findOne({ registerNo: body.reg_no });
         if (!user) {
             return { error: true, message: 'User not found' };
@@ -24,12 +31,32 @@ export class AuthService {
         if (!isMatch) {
             return { error: true, message: 'Invalid credentials' };
         }
-        const profile = await this.studentProfileModel.findOne({ user: user._id })
-                        .select('name gender department year contacts -_id');
+        const isFirstLogin = user.isFirstLogin;
+        if(user.isFirstLogin) {
+            user.isFirstLogin = false;
+            await user.save();
+        }
+        const profile = await this.studentProfileModel.findOne({ userId: user._id })
+                        // .select('name gender department year contacts -_id');
+        
+        if(profile?.mailId) {
+            Logger.debug("Sending a testing mail",profile.mailId)
+            // this.mailService.sendWelcomeMail(profile.mailId,profile.name)
+        }
+
+        const payload = {sub: user._id, registerNo: user.registerNo , role: user.role}
+
+        const accessToken = this.jwtService.sign(payload,{
+            secret: this.configService.get('JWT_SECRET_KEY'),
+            expiresIn:this.configService.get('JWT_EXPIRATION_TIME')
+        })
+
+        res.setHeader('Set-Cookie', `jwt=${accessToken}; HttpOnly; Path=/; Max-Age=3600; SameSite=Lax`);
+
         const safeUser = {
             registerNo: user.registerNo,
             role: user.role,
-            isFirstLogin: user.isFirstLogin
+            isFirstLogin: isFirstLogin
         };
         return { error: false, message: 'Login successful', data: { user:safeUser, profile} };
     }
