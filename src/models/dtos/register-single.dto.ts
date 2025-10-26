@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsString, IsNumber } from "class-validator";
+import { IsNotEmpty, IsString, IsNumber, IsEmail, IsEnum } from "class-validator";
+import { Years } from "src/common/enums/years.enums";
 
 export class RegisterSingleDto {
     @IsNotEmpty()
@@ -14,7 +15,7 @@ export class RegisterSingleDto {
     name: string;
 
     @IsNotEmpty()
-    @IsNumber()
+    @IsEnum(Years)
     year: number;
 
     @IsNotEmpty()
@@ -25,7 +26,7 @@ export class RegisterSingleDto {
     @IsString()
     department: string;
 
-    @IsNotEmpty()
+    @IsEmail()
     @IsString()
-    role: string;
+    mailId:string;
 }

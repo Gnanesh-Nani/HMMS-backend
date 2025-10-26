@@ -13,7 +13,10 @@ export class HostelService {
     ){}
 
     async getAllHostel() {
-        const hostels = await this.hostelModel.find()
+        const hostels = await this.hostelModel.find().populate({
+            path:'mealPlan',
+            select: 'name'
+        })
         
         if(hostels.length == 0) {
             handleError("No Hostels Found")

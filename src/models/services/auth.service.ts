@@ -25,11 +25,11 @@ export class AuthService {
     async login(body: loginDto,res: Response) {
         const user = await this.userModel.findOne({ registerNo: body.reg_no });
         if (!user) {
-            return { error: true, message: 'User not found' };
+            return { error: true, message: 'Register Number Not Found' };
         }
         const isMatch = await bcrypt.compare(body.password, user.password);
         if (!isMatch) {
-            return { error: true, message: 'Invalid credentials' };
+            return { error: true, message: 'Invalid Password' };
         }
         const isFirstLogin = user.isFirstLogin;
         if(user.isFirstLogin) {
@@ -39,10 +39,6 @@ export class AuthService {
         const profile = await this.studentProfileModel.findOne({ userId: user._id })
                         // .select('name gender department year contacts -_id');
         
-        if(profile?.mailId) {
-            Logger.debug("Sending a testing mail",profile.mailId)
-            // this.mailService.sendWelcomeMail(profile.mailId,profile.name)
-        }
 
         const payload = {sub: user._id, registerNo: user.registerNo , role: user.role}
 
@@ -51,7 +47,7 @@ export class AuthService {
             expiresIn:this.configService.get('JWT_EXPIRATION_TIME')
         })
 
-        res.setHeader('Set-Cookie', `jwt=${accessToken}; HttpOnly; Path=/; Max-Age=3600; SameSite=Lax`);
+        res.setHeader('Set-Cookie', `jwt=${accessToken}; HttpOnly; Path=/; Max-Age=86400; SameSite=Lax`);
 
         const safeUser = {
             registerNo: user.registerNo,

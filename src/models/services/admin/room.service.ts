@@ -57,8 +57,19 @@ export class RoomService {
     async updateRoom(roomId:string,createRoomDto: Partial<CreateRoomDto>) {
 
         const room = await this.roomModel.findById(roomId);
+        
         if(!room)
-            handleError("No room found for this Id");
+            return handleError("No room found for this Id");
+
+        const block = await this.blockModel.findById(room.blockId).lean();
+        
+        if(!block)
+            return handleError("This Room is Zombie its not assoiated with any block");
+
+                const blockMaxFloor = block.totalFloors;
+
+        if(createRoomDto.floorNo && ( createRoomDto.floorNo < 0 || createRoomDto.floorNo >= blockMaxFloor))
+            return handleError(`Invalid floor Number, For the Selected Block, floor Number should lie in the range of 0 - ${blockMaxFloor-1}`);
 
         await this.roomModel.updateOne({_id:roomId},{$set:createRoomDto})
 

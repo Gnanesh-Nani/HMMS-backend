@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import mongoose from "mongoose";
+import mongoose, { Document } from "mongoose";
 import { applyDefaultToJSON } from "src/utils/schema-transformer.utils";
 import { MealPlan } from "./meal-plan.schema";
 
@@ -12,7 +12,7 @@ export enum HostelGenderType {
 }
 
 @Schema() 
-export class Hostel {
+export class Hostel extends Document{
     @Prop({required: true})
     name:string;
 
@@ -28,7 +28,7 @@ export class Hostel {
     @Prop({required: true})
     description:string;
     
-    @Prop({type:mongoose.Schema.Types.ObjectId,ref:MealPlan.name ,required:true})
+    @Prop({type:mongoose.Schema.Types.ObjectId,ref: MealPlan.name ,required:true})
     mealPlan: MealPlan
 }
 

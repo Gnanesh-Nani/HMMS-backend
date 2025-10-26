@@ -15,7 +15,7 @@ export enum DayOfWeek {
 }
 
 @Schema()
-export class MealPlan {
+export class MealPlan extends Document{
 
   @Prop({ required: true })
   name: string;  
