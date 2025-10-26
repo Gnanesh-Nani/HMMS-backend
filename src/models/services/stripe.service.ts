@@ -44,8 +44,8 @@ export class StripeService {
         },
       ],
       mode: 'payment',
-      success_url: `${this.configService.get('STRIPE_SUCCESS_URL')}?paymentId=${paymentId}`,
-      cancel_url: `${this.configService.get('STRIPE_CANCEL_URL')}`,
+      success_url: `${this.configService.get('STRIPE_SUCCESS_URL')}?paymentId=${paymentId}&success=true`,
+      cancel_url: `${this.configService.get('STRIPE_CANCEL_URL')}paymentId=${paymentId}&success=false`,
       metadata: {
         studentId,
         paymentId,

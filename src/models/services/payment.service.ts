@@ -5,6 +5,7 @@ import { Model } from "mongoose";
 import { CreatePaymentDto } from "../dtos/create-payment.dto";
 import { handleResponse } from "src/utils/response.utils";
 import { handleError } from "src/utils/handle-error";
+import { PaymentStatus } from "src/common/enums/payment-status.enum";
 
 @Injectable()
 export class PaymentService {
@@ -24,6 +25,8 @@ export class PaymentService {
         if(!updatedPayment) {
             return handleError('Failed to update payment');
         }
+        if(updatedPayment.status == PaymentStatus.SUCCESS)
+            return handleError('Failed to update payment, Payment already Done');
         return handleResponse(updatedPayment, 'Payment updated successfully');
     }   
 
@@ -36,12 +39,19 @@ export class PaymentService {
     }
 
     async getAll() {
-        const payments = await this.paymentModel.find();
-        if(payments.length === 0) {
+        const payments = await this.paymentModel.find()
+        .populate({
+            path: 'studentProfileId', // the field in Payment that references StudentProfile
+            select: 'name gender registerNo department year',       
+        });
+
+        if (payments.length === 0) {
             return handleError('No payments found');
         }
+
         return handleResponse(payments, 'Payments retrieved successfully');
     }
+
 
     async getByStudent(studentProfileId: string) {
         const payments = await this.paymentModel.find({ studentProfileId });

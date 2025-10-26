@@ -23,7 +23,6 @@ export class RoleGuard implements CanActivate {
         
         const req = context.switchToHttp().getRequest();
         
-        Logger.debug(ExpectedRole,req.user)
 
         if(req.user.role == ExpectedRole)  return true;
         

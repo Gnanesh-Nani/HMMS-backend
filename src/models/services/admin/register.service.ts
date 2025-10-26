@@ -8,6 +8,8 @@ import * as fs from 'fs';
 import * as Papa from 'papaparse';
 import { RegisterSingleDto } from "src/models/dtos/register-single.dto";
 import { UserRoles } from "src/common/enums/roles.enum";
+import { handleResponse } from "src/utils/response.utils";
+import { handleError } from "src/utils/handle-error";
 
 @Injectable()
 export class RegisterService {
@@ -18,9 +20,10 @@ export class RegisterService {
     ) { }
 
     async registerSingle(@Body() body: RegisterSingleDto) {
-        const user = await this.userModel.findOne({ registerNo: body.registerNo });
+        const user = await this.userModel.findOne({ registerNo: body.registerNo , 
+            department: { $ne: null }});
         if (user) {
-            return { error: true, message: 'User already exists' };
+            return handleError("Student Already Exist");
         }
         const salt = await bcrypt.genSalt();
 
@@ -38,17 +41,18 @@ export class RegisterService {
             year: body.year,
             gender: body.gender,
             department: body.department,
+            mailId: body.mailId
         });
 
         await newStudentProfile.save();
 
-        return { error: false, message: 'User registered successfully' };
+        return handleResponse({},"Student registered successfully");
     }
 
     async registerSingleAdmin(body:any){
         const user = await this.userModel.findOne({ registerNo: body.registerNo });
         if (user) {
-            return { error: true, message: 'User already exists' };
+            return handleError("Admin Already Exist");
         }
         const salt = await bcrypt.genSalt();
 
@@ -68,7 +72,7 @@ export class RegisterService {
 
         await newStudentProfile.save();
 
-        return { error: false, message: 'User registered successfully' };
+        return handleResponse({},"Admin registered successfully");
     }
 
     async registerBulk(file: Express.Multer.File) {
