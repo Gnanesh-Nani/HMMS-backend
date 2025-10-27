@@ -5,8 +5,9 @@ import { StudentsModule } from './students/students.module';
 import { MailModule } from './mail/mail.module';
 import { PaymentModule } from './payment/payment.module';
 import { StripeModule } from './stripe/stripe.module';
+import { NoDueModule } from './no-due/no-due.module';
 
 @Module({
-  imports: [AuthModule, AdminModule, StudentsModule, MailModule, PaymentModule, StripeModule],
+  imports: [AuthModule, AdminModule, StudentsModule, MailModule, PaymentModule, StripeModule, NoDueModule],
 })
 export class ModulesModule {}

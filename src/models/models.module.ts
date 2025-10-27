@@ -21,6 +21,8 @@ import { Payment, PaymentSchema } from './schemas/payment.schema';
 import { Transaction, TransactionSchema } from './schemas/transaction.schema';
 import { StripeService } from './services/stripe.service';
 import { TransactionsService } from './services/transaction.service';
+import { NoDue, NoDueSchema } from './schemas/no-due.schema';
+import { NoDueService } from './services/no-due.service';
 
 
 @Module({
@@ -33,10 +35,11 @@ import { TransactionsService } from './services/transaction.service';
                                 { name: MealPlan.name,schema: MealPlanSchema},
                                 { name: Notification.name, schema: NotificationSchmea},
                                 { name: Payment.name, schema: PaymentSchema},
-                                { name: Transaction.name, schema: TransactionSchema}
+                                { name: Transaction.name, schema: TransactionSchema},
+                                { name: NoDue.name,schema: NoDueSchema}
                               ]),
   ],
-  providers: [AuthService,RegisterService,JwtService,HostelService,BlockService,RoomService,MealPlanService,StudentService,MailService,OtpService,StripeService,TransactionsService],
+  providers: [AuthService,RegisterService,JwtService,HostelService,BlockService,RoomService,MealPlanService,StudentService,MailService,OtpService,StripeService,TransactionsService,NoDueService],
   exports: [AuthService, 
     MongooseModule,
     RegisterService,
