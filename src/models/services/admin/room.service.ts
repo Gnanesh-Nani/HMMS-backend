@@ -17,9 +17,12 @@ export class RoomService {
     ){}
 
     async getAllRooms(blockId:string) {
-        const rooms = await this.roomModel.find({blockId});
+        const rooms = await this.roomModel.find({blockId}).populate({
+            path:'currentStudents',
+            select:'id name year department'
+        });
         if(rooms.length == 0)
-            handleError("No room found for this block");
+            return handleError("No room found for this block");
         
         return handleResponse(rooms,"Rooms Retrived Sucessfully");
 
@@ -28,7 +31,7 @@ export class RoomService {
     async getRoomById(roomId:string) {
         const room = await this.roomModel.findById(roomId);
         if(!room)
-            handleError("No room found for this Id");
+            return handleError("No room found for this Id");
 
         return handleResponse(room,"Room Retrived Sucessfully");
     }
@@ -66,7 +69,10 @@ export class RoomService {
         if(!block)
             return handleError("This Room is Zombie its not assoiated with any block");
 
-                const blockMaxFloor = block.totalFloors;
+        const blockMaxFloor = block.totalFloors;
+        
+        if(createRoomDto.maxCapacity && room.currentStudents.length > createRoomDto.maxCapacity)
+            return handleError("The Room Contains more number of students that the new capcaity")
 
         if(createRoomDto.floorNo && ( createRoomDto.floorNo < 0 || createRoomDto.floorNo >= blockMaxFloor))
             return handleError(`Invalid floor Number, For the Selected Block, floor Number should lie in the range of 0 - ${blockMaxFloor-1}`);
@@ -81,21 +87,31 @@ export class RoomService {
     async deleteRoom(roomId:string){
         const room = await this.roomModel.findById(roomId);
         if(!room)
-            handleError("No room found for this Id to delete")
+            return handleError("No room found for this Id to delete")
+
+        if(room.currentStudents.length > 0)
+            return handleError("There are some students associated with the room! Please Remove them or change them to other romm")
 
         await this.roomModel.findByIdAndDelete(roomId);
 
         return handleResponse({},"Room Deleted Sucessfully")
     }
 
-    async allocateStudent(roomId:string,studentId:string){
+    async allocateStudent(roomId:string,studentId:string,hostelId: string){
         const room = await this.roomModel.findById(roomId);
         if(!room)
             return handleError("No room found for this Id to allocat")
 
+        if(room.currentStudents.length == room.maxCapacity)
+            return handleError("Room Reached its Maximum Capacity");
+        
         const student = await this.studentProfileModel.findById(studentId);
         if(!student)
             return handleError("No student found for this Id to allocate")
+
+        if(student.hostel)
+           return handleError("This Student is already allocated in another room")
+
 
         const studentExists = room.currentStudents.some(
             (id: any) => id.toString() === studentId
@@ -107,6 +123,7 @@ export class RoomService {
         await this.roomModel.findByIdAndUpdate(
             roomId, {$addToSet:{ currentStudents: studentId }}
         );
+        await this.studentProfileModel.findByIdAndUpdate(studentId,{hostel:hostelId});
         return handleResponse({},"students inserted Sucessfully")
     }
     
@@ -125,12 +142,13 @@ export class RoomService {
         );
 
         if (!studentExists) {
-            handleError("Student is not allocated to this room");
+            return handleError("Student is not allocated to this room");
         }
-
+        
         await this.roomModel.findByIdAndUpdate(
             roomId, {$pull:{ currentStudents: studentId }}
         );
+        await this.studentProfileModel.findByIdAndUpdate(studentId,{hostel:null});
         return handleResponse({},"students removed Sucessfully")
     }
 
