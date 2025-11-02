@@ -28,6 +28,10 @@ export class StripeService {
     if(!payment){
       return handleError("Invalid Payment ID");
     }
+    const now = new Date();
+    if(payment.dueDate < now){
+      payment.amount += 250; //fine amount
+    }
     const session = await this.stripe.checkout.sessions.create({
       payment_method_types: ['card','amazon_pay'],
       line_items: [

@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Inject, Param, Patch, Post, Req } from '@nestjs/common';
 import { Role } from 'src/common/decorators/roles.decorator';
-import { CreatePaymentDto } from 'src/models/dtos/create-payment.dto';
+import { BulkPaymentDto, CreatePaymentDto } from 'src/models/dtos/create-payment.dto';
 import { PaymentService } from 'src/models/services/payment.service';
 
 @Controller('payment')
@@ -36,5 +36,10 @@ export class PaymentController {
     //@Role('student')
     async getMyPayments(@Param('studentProfileId') studentProfileId: string) {
         return this.paymentService.getByStudent(studentProfileId);
+    }
+
+    @Post('/bulk-allocate')
+    async bulkAllocate(@Param('hostelId') hostelId: string , @Body() body: BulkPaymentDto){
+        return this.paymentService.bulkAllocate(body); 
     }
 }
