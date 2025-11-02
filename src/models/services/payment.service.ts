@@ -1,17 +1,24 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Payment, PaymentDocument, PaymentSchema } from "../schemas/payment.schema";
 import { Model } from "mongoose";
-import { CreatePaymentDto } from "../dtos/create-payment.dto";
+import { BulkPaymentDto, CreatePaymentDto } from "../dtos/create-payment.dto";
 import { handleResponse } from "src/utils/response.utils";
 import { handleError } from "src/utils/handle-error";
 import { PaymentStatus } from "src/common/enums/payment-status.enum";
+import { StudentProfile, StudentProfileDocument } from "../schemas/student-profile.schema";
 
 @Injectable()
 export class PaymentService {
-    @InjectModel(Payment.name) private readonly paymentModel: Model<PaymentDocument>;
+    constructor (
+        @InjectModel(Payment.name) private readonly paymentModel: Model<PaymentDocument>,
+        @InjectModel(StudentProfile.name) private readonly studentProfileModel: Model<StudentProfileDocument>
+    ){}
 
     async allocatePayment(dto: CreatePaymentDto) {
+        const studentProfile = await this.studentProfileModel.findById(dto.studentProfileId);
+        if(!studentProfile)
+            return handleError('Invalid Student Profile Id');
         const payment = new this.paymentModel(dto);
         const savedPayment = await payment.save();
         if(!savedPayment) {
@@ -59,5 +66,21 @@ export class PaymentService {
             return handleError('No payments found for this student');
         }
         return handleResponse(payments, 'Student payments retrieved successfully');
+    }
+
+    async bulkAllocate(body: BulkPaymentDto) {
+        Logger.debug("Bulk Payment Called")
+        let response : { success: number, failed : {studentProfileId:string ,message:string}[] } = { success: 0, failed: [] }
+        for(const payments of body.payments){
+             // console.log("paument", payments)
+            try {
+                await this.allocatePayment(payments);
+                response.success++;
+                // Logger.debug("Hi");
+            } catch (err) {
+                response.failed.push({studentProfileId : payments.studentProfileId, message: err.message});
+            }
+        }
+        return handleResponse(response,"payments allocated sucessfully");
     }
 }

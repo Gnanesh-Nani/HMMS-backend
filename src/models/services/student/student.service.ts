@@ -20,6 +20,15 @@ export class StudentService {
         return handleResponse(studentProfiles,"Successfully Retrived the Students Profile Data");
     }
 
+    async getAllHostelStudentsProfile(hostelId: string) {
+        const studentProfiles = await this.studentProfileModel.find({hostel:hostelId});
+        if(studentProfiles.length == 0)
+            return handleError("No students Profile Data Found");
+
+        return handleResponse(studentProfiles,"Successfully Retrived the Students Profile Data");
+    }
+
+
     async getStudentProfileById(studentProfileId:string){
         const studentProfile = await this.studentProfileModel.findById(studentProfileId);
         if(!studentProfile)

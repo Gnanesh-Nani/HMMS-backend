@@ -12,6 +12,11 @@ export class StudentsController {
         return this.studentService.getAllStudentProfile()
     }
 
+    @Get('hostel/:hostelId')
+    getAllHostelStudentsProfile(@Param('hostelId') hostelId: string) {
+        return this.studentService.getAllHostelStudentsProfile(hostelId);
+    }
+
     @Get(':studentProfileId')
     getStudentProfileById(@Param('studentProfileId') id:string) {
         return this.studentService.getStudentProfileById(id);
@@ -34,4 +39,6 @@ export class StudentsController {
     deleteStudentProfile(@Param('studentProfileId') id:string) {
         return this.studentService.deleteStudentProfile(id);
     }
+
+
 }

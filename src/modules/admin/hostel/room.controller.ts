@@ -42,8 +42,8 @@ export class RoomManagmentController {
     }
 
     @Patch('/:roomId/allocate/:studentId')
-    allocateStudent(@Param('roomId') roomId:string,@Param('studentId') studentId:string) {
-        return this.roomService.allocateStudent(roomId,studentId);
+    allocateStudent(@Param('roomId') roomId:string,@Param('studentId') studentId:string,@Body() body: {hostelId:string}) {
+        return this.roomService.allocateStudent(roomId,studentId,body.hostelId);
     }
 
     @Patch('/:roomId/remove/:studentId')

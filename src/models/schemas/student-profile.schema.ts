@@ -3,6 +3,7 @@ import { Document } from 'mongoose';
 import * as mongoose from 'mongoose';
 import { User } from './user.schema';
 import { applyDefaultToJSON } from 'src/utils/schema-transformer.utils';
+import { Hostel } from './hostel.schema';
 
 export type StudentProfileDocument = StudentProfile & Document;
 
@@ -42,6 +43,9 @@ export class StudentProfile {
 
   @Prop({default: null})
   mailId: string;
+  
+  @Prop({type: mongoose.Schema.Types.ObjectId, ref: Hostel.name})
+  hostel: Hostel;
 }
 
 export const StudentProfileSchema = SchemaFactory.createForClass(StudentProfile);

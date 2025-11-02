@@ -1,4 +1,4 @@
-import { IsMongoId, IsNotEmpty, IsEnum, IsNumber, IsDateString, IsOptional } from 'class-validator';
+import { IsMongoId, IsNotEmpty, IsEnum, IsNumber, IsDateString, IsOptional, IsArray } from 'class-validator';
 import { FeeTypes } from 'src/common/enums/fee-types.enums';
 
 export class CreatePaymentDto {
@@ -19,4 +19,10 @@ export class CreatePaymentDto {
 
   @IsOptional()
   description?: string;
+}
+
+export class BulkPaymentDto {
+  @IsArray()
+  @IsNotEmpty()
+  payments: CreatePaymentDto[];
 }
