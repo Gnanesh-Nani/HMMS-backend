@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
+import { retry } from "rxjs";
 import { CreateRoomDto } from "src/models/dtos/create-room-dto";
 import { Block, BlockDocument } from "src/models/schemas/block.schema";
 import { Room, RoomDocument } from "src/models/schemas/room.schema";
@@ -95,6 +96,18 @@ export class RoomService {
         await this.roomModel.findByIdAndDelete(roomId);
 
         return handleResponse({},"Room Deleted Sucessfully")
+    }
+
+    async allocateStudentByRegisterNo(roomId: string,registerNo: string,hostelId: string){
+        try {
+            const studentProfile = await this.studentProfileModel.findOne({registerNo});
+            if(!studentProfile)
+                return handleError("No student found with the given register no")
+            return await this.allocateStudent(roomId,studentProfile.id,hostelId);
+        }catch(err){
+            Logger.debug("Error Allocating the student");
+        }
+        return handleError("Failed to allocate studented");
     }
 
     async allocateStudent(roomId:string,studentId:string,hostelId: string){

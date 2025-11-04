@@ -47,4 +47,8 @@ export class CreateStudentProfileDto {
     @IsOptional()
     @IsString()
     mailId?: string;
+
+    @IsOptional()
+    @IsString()
+    registerNo:string;
 }

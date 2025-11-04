@@ -41,7 +41,8 @@ export class RegisterService {
             year: body.year,
             gender: body.gender,
             department: body.department,
-            mailId: body.mailId
+            mailId: body.mailId,
+            registerNo: body.registerNo
         });
 
         await newStudentProfile.save();
@@ -111,7 +112,8 @@ export class RegisterService {
                     gender,
                     department,
                     year: parseInt(year, 10),
-                    mailId
+                    mailId,
+                    registerNo: registerNo
                 });
 
                 await profile.save();

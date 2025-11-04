@@ -46,6 +46,9 @@ export class StudentProfile {
   
   @Prop({type: mongoose.Schema.Types.ObjectId, ref: Hostel.name})
   hostel: Hostel;
+  
+  @Prop({default: null})
+  registerNo:string;
 }
 
 export const StudentProfileSchema = SchemaFactory.createForClass(StudentProfile);

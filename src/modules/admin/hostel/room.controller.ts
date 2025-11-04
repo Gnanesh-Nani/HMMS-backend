@@ -46,6 +46,11 @@ export class RoomManagmentController {
         return this.roomService.allocateStudent(roomId,studentId,body.hostelId);
     }
 
+    @Patch('/:roomId/allocate-by-registerNo/:registerNo')
+    allocateStudentByRegisterNo(@Param('roomId') roomId:string,@Param('registerNo') registerNo:string,@Body() body: {hostelId:string}) {
+        return this.roomService.allocateStudentByRegisterNo(roomId,registerNo,body.hostelId);
+    }
+
     @Patch('/:roomId/remove/:studentId')
     removeStudent(@Param('roomId') roomId:string,@Param('studentId') studentId:string) { 
         return this.roomService.removeStudent(roomId,studentId);
