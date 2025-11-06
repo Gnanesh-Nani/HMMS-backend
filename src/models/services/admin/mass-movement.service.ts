@@ -16,14 +16,20 @@ import { RoomService } from "./room.service";
 import { Payment, PaymentDocument } from "src/models/schemas/payment.schema";
 import { PaymentStatus } from "src/common/enums/payment-status.enum";
 import { StudentPreference, StudentPreferenceDocument } from "src/models/schemas/student-preference.schema";
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import { join } from 'path';
+import { error } from "console";
 
-interface HostelPaymentPercentage {
+const execAsync = promisify(exec);
+
+export interface HostelPaymentPercentage {
     hostelId: string;
     totalNoOfPayments: number;
     completedNoOfPayments: number;
 }
 
-interface PreferenceEntry {
+export interface PreferenceEntry {
     id: string;
     name: string;
     registerNumber: string;
@@ -127,9 +133,9 @@ export class MassMovementService {
     }
 
     async createMassMovement(body: CreateMassMovementDto) {
-        if(true)
-            return body;
-        /* const currentDate = new Date();
+        // if(true)
+        //     return body;
+        const currentDate = new Date();
         const dueDate = new Date(currentDate);
         dueDate.setDate(currentDate.getDate() + 15);
 
@@ -214,37 +220,108 @@ export class MassMovementService {
             throw err;
         } finally {
             session.endSession();
-        } */
+        } 
     }
 
-    async createPreferenceDataSet(year:number,session?: mongoose.ClientSession) {
-        const studentProfiles = await this.studentProfileModel.find({year});
+    async createPreferenceDataSet(massMovementId: string,year:number,session?: mongoose.ClientSession) {
+        const studentProfiles = await this.studentProfileModel.find({year,hostel:null});
         const dataSet:PreferenceEntry[] = [];
         for(const studentProfile of studentProfiles){
+            const isPaymentDone = await this.paymentModel.findOne({massMovement:massMovementId,studentProfileId:studentProfile.id,status:PaymentStatus.SUCCESS});
+            if(!isPaymentDone)
+                continue;
             const studentPreference = await this.studentPreferenceModel.findOne({studentProfileId: studentProfile.id});
-            if(!studentPreference)
-                return handleError("student preference no found");
+            
+            let dataItem : PreferenceEntry;
 
-            const dataItem : PreferenceEntry = {
-                id: studentProfile.id,
-                name: studentProfile.name,
-                registerNumber: studentProfile.registerNo,
-                gender: studentProfile.gender,
-                year: studentProfile.year,
-                department: studentProfile.department,
-                physicallyChallenged: studentProfile.physicallyChallenged,
-                preferedRoomMates: studentPreference.preferredRoommates,
-                wakeupTime: studentPreference.wakeupTime,
-                sleepTime: studentPreference.sleepTime,
-                studyHabit: studentPreference.studyHabit,
-                healthCondition: studentPreference.healthCondition
+            if(!studentPreference){
+                dataItem = {
+                    id: studentProfile.id,
+                    name: studentProfile.name,
+                    registerNumber: studentProfile.registerNo,
+                    gender: studentProfile.gender,
+                    year: studentProfile.year,
+                    department: studentProfile.department,
+                    physicallyChallenged: studentProfile.physicallyChallenged,
+                    preferedRoomMates: [],
+                    wakeupTime: "08:00:00",
+                    sleepTime: "08:00:00",
+                    studyHabit: "flexible",
+                    healthCondition: "none"
+                }
+            }
+            else {
+                dataItem = {
+                    id: studentProfile.id,
+                    name: studentProfile.name,
+                    registerNumber: studentProfile.registerNo,
+                    gender: studentProfile.gender,
+                    year: studentProfile.year,
+                    department: studentProfile.department,
+                    physicallyChallenged: studentProfile.physicallyChallenged,
+                    preferedRoomMates: studentPreference.preferredRoommates,
+                    wakeupTime: studentPreference.wakeupTime,
+                    sleepTime: studentPreference.sleepTime,
+                    studyHabit: studentPreference.studyHabit,
+                    healthCondition: studentPreference.healthCondition
+                }
             }
             dataSet.push(dataItem);
         }
-        return dataSet;
+        Logger.debug(dataSet);
+        return handleResponse(dataSet,"sucessfully created dataset");
     }
 
-    async doAllocation(massMovementId: string,hostelId: string,year: number) {
+    async triggerAllocation(massMovementId: string, hostelId: string, year: number): Promise<any> {
+    Logger.log(`Triggering allocation for MassMovement: ${massMovementId}, Hostel: ${hostelId}, Year: ${year}`);
 
+    try {
+      // Get the path to your Python script
+      const pythonScriptPath = join(process.cwd(), 'src', 'scripts', 'hostel_allocation.py');
+      const venvPythonPath = join(process.cwd(), 'venv', 'bin', 'python3');
+      
+      Logger.log(`Executing Python script: ${pythonScriptPath}`);
+
+      // Use the virtual environment Python
+      const command = `"${venvPythonPath}" "${pythonScriptPath}" "${massMovementId}" "${hostelId}" "${year}"`;
+      Logger.log(`Command: ${command}`);
+
+      const { stdout, stderr } = await execAsync(command, {
+        timeout: 300000, // 5 minutes timeout
+        cwd: process.cwd(), // Run from project root
+      });
+
+      if (stderr) {
+        Logger.warn(`Python script stderr: ${stderr}`);
+      }
+
+      Logger.log('Python script executed successfully');
+      Logger.log(`Python script output: ${stdout}`);
+
+      // Try to parse JSON output from Python script
+      try {
+        const result = JSON.parse(stdout);
+        return {
+          success: true,
+          message: 'Allocation completed successfully',
+          data: result
+        };
+      } catch (parseError) {
+        // If output is not JSON, return as string
+        return {
+          success: true,
+          message: 'Allocation completed',
+          data: { output: stdout }
+        };
+      }
+
+    } catch (error) {
+      Logger.error(`Error executing allocation script: ${error.message}`);
+      return {
+        success: false,
+        message: `Allocation failed: ${error.message}`,
+        data: null
+      };
     }
+  }
 }

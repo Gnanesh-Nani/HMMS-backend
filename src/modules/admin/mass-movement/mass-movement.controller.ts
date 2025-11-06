@@ -21,4 +21,19 @@ export class MassMovementController {
     createMassMovement(@Body() body: CreateMassMovementDto) {
         return this.massMovementService.createMassMovement(body);
     }
+
+    @Get('get-dataset/:massMovementId/:year')
+    createPreferenceDataSet(@Param('massMovementId') id: string,@Param('year') year: string) {
+        return this.massMovementService.createPreferenceDataSet(id,parseInt(year));
+    }
+
+
+    @Post('allocate-hostel/:massMovementId/:hostelId/:year')
+        allocateHostel(
+        @Param('massMovementId') massMovementId: string,
+        @Param('hostelId') hostelId: string,
+        @Param('year') year: string
+    ) {
+        return this.massMovementService.triggerAllocation(massMovementId, hostelId, parseInt(year));
+    }
 }
