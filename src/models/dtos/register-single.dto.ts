@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsNumber, IsEmail, IsEnum } from "class-validator";
+import { IsNotEmpty, IsString, IsNumber, IsEmail, IsEnum, IsBoolean } from "class-validator";
 import { Years } from "src/common/enums/years.enums";
 
 export class RegisterSingleDto {
@@ -29,4 +29,7 @@ export class RegisterSingleDto {
     @IsEmail()
     @IsString()
     mailId:string;
+
+    @IsBoolean()
+    physicallyChallenged: boolean;
 }

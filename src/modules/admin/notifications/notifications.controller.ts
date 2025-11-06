@@ -15,8 +15,13 @@ export class NotificationsController {
     }
 
     @Get(':notificationId')
-    getNotificationById(@Param('notificationId') id:string){
-        return this.notificationService.getNotificationById(id);
+    getNotificationById(@Param('notificationId') notificationId:string){
+        return this.notificationService.getNotificationById(notificationId);
+    }
+
+    @Get('me/:studentProfileId')
+    getMyNotification(@Param("studentProfileId") studentProfileId:string){
+        return this.notificationService.getMyNotifications(studentProfileId);
     }
 
     @Post()
