@@ -23,6 +23,10 @@ import { StripeService } from './services/stripe.service';
 import { TransactionsService } from './services/transaction.service';
 import { NoDue, NoDueSchema } from './schemas/no-due.schema';
 import { NoDueService } from './services/no-due.service';
+import { MassMovement, MassMovementSchema } from './schemas/mass-movement.schema';
+import { StudentPreference, StudentPreferenceSchema } from './schemas/student-preference.schema';
+import { MassMovementService } from './services/admin/mass-movement.service';
+import { PaymentService } from './services/payment.service';
 
 
 @Module({
@@ -36,14 +40,18 @@ import { NoDueService } from './services/no-due.service';
                                 { name: Notification.name, schema: NotificationSchmea},
                                 { name: Payment.name, schema: PaymentSchema},
                                 { name: Transaction.name, schema: TransactionSchema},
-                                { name: NoDue.name,schema: NoDueSchema}
+                                { name: NoDue.name,schema: NoDueSchema},
+                                { name: MassMovement.name,schema: MassMovementSchema},
+                                { name: StudentPreference.name, schema: StudentPreferenceSchema}
                               ]),
   ],
-  providers: [AuthService,RegisterService,JwtService,HostelService,BlockService,RoomService,MealPlanService,StudentService,MailService,OtpService,StripeService,TransactionsService,NoDueService],
+  providers: [AuthService,RegisterService,JwtService,HostelService,BlockService,RoomService,MealPlanService,StudentService,MailService,OtpService,StripeService,TransactionsService,NoDueService,MassMovementService,PaymentService],
   exports: [AuthService, 
     MongooseModule,
     RegisterService,
-    MailService
+    MailService,
+    PaymentService,
+    MassMovementService
   ],
 })
 export class ModelsModule {}

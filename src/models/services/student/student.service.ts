@@ -1,16 +1,61 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
+import { CreateStudentPreferenceDto } from "src/models/dtos/create-student-preference.dto";
 import { CreateStudentProfileDto } from "src/models/dtos/create-student-profile.dto";
+import { StudentPreference, StudentPreferenceDocument } from "src/models/schemas/student-preference.schema";
 import { StudentProfile, StudentProfileDocument } from "src/models/schemas/student-profile.schema";
 import { handleError } from "src/utils/handle-error";
 import { handleResponse } from "src/utils/response.utils";
+import { Types } from "mongoose";
 
 @Injectable()
 export class StudentService {
     constructor(
-        @InjectModel(StudentProfile.name) private readonly studentProfileModel: Model<StudentProfileDocument>
+        @InjectModel(StudentProfile.name) private readonly studentProfileModel: Model<StudentProfileDocument>,
+        @InjectModel(StudentPreference.name) private readonly studentPreferenceModel: Model<StudentPreferenceDocument>
     ){}
+
+    async getStudentPreferenceById(studentProfileId: string) {
+        const studentPreference = await this.studentPreferenceModel.findOne({studentProfileId});
+        if(!studentPreference)
+            return handleError("No student preference found for this studetnProfileId");
+        return handleResponse(studentPreference,"Sucessfully retrived student preferenec");
+    }
+
+    async createStudentPreference(dto: CreateStudentPreferenceDto) {
+        const studentExists = await this.studentProfileModel.exists({ _id: dto.studentProfileId });
+        if (!studentExists) {
+            return handleError(`Student profile with ID ${dto.studentProfileId} not found`);
+        }
+        const isPreferenceExists = await this.studentPreferenceModel.exists({studentProfileId: dto.studentProfileId})
+        if(isPreferenceExists)
+            return handleError("Student Preference already exist for this studetn Profile!");
+        
+        const studentPreference = new this.studentPreferenceModel(dto);
+        await studentPreference.save();
+
+        return handleResponse(studentPreference, "Successfully created student preference");
+
+    }
+
+    async updateStudentPreference(studentProfileId: string, dto: Partial<CreateStudentPreferenceDto>) {
+            if (!Types.ObjectId.isValid(studentProfileId)) {
+                return handleError("Invalid studentProfileId");
+            }
+
+            const updatedPreference = await this.studentPreferenceModel.findOneAndUpdate(
+                { studentProfileId },
+                { $set: dto },
+                { new: true } 
+            );
+
+            if (!updatedPreference) {
+                return handleError(`No student preference found for studentProfileId ${studentProfileId}`);
+            }
+
+            return handleResponse(updatedPreference, "Successfully updated student preference");
+    }
 
     async getAllStudentProfile() {
         const studentProfiles = await this.studentProfileModel.find();

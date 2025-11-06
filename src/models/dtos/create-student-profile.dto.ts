@@ -1,4 +1,4 @@
-import { ArrayNotEmpty, IsArray, IsDate, IsEnum, IsMongoId, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { ArrayNotEmpty, IsArray, IsBoolean, IsDate, IsEnum, IsMongoId, IsNotEmpty, IsOptional, IsString } from "class-validator";
 import { GENDERS } from "../schemas/student-profile.schema";
 import { Departments } from "src/common/enums/departments.enum";
 import { Transform, Type } from "class-transformer";
@@ -51,4 +51,7 @@ export class CreateStudentProfileDto {
     @IsOptional()
     @IsString()
     registerNo:string;
+
+    @IsBoolean()
+    physicallyChallenged: boolean;
 }

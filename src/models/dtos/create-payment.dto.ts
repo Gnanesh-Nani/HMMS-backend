@@ -19,6 +19,14 @@ export class CreatePaymentDto {
 
   @IsOptional()
   description?: string;
+
+  @IsOptional()
+  @IsMongoId()
+  massMovement: string;
+
+  @IsOptional()
+  @IsMongoId()
+  hostel: string;
 }
 
 export class BulkPaymentDto {

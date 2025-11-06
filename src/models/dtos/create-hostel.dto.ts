@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from "class-validator";
+import { IsNotEmpty, IsNumber, IsString } from "class-validator";
 
 export class CreateHostelDto {
     @IsString()
@@ -20,4 +20,8 @@ export class CreateHostelDto {
     @IsString()
     @IsNotEmpty()
     mealPlan:string;
+
+    @IsNotEmpty()
+    @IsNumber()
+    hostelFee:number;
 }

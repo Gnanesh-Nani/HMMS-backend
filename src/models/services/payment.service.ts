@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Payment, PaymentDocument, PaymentSchema } from "../schemas/payment.schema";
-import { Model } from "mongoose";
+import { ClientSession, Model } from "mongoose";
 import { BulkPaymentDto, CreatePaymentDto } from "../dtos/create-payment.dto";
 import { handleResponse } from "src/utils/response.utils";
 import { handleError } from "src/utils/handle-error";
@@ -15,17 +15,20 @@ export class PaymentService {
         @InjectModel(StudentProfile.name) private readonly studentProfileModel: Model<StudentProfileDocument>
     ){}
 
-    async allocatePayment(dto: CreatePaymentDto) {
-        const studentProfile = await this.studentProfileModel.findById(dto.studentProfileId);
-        if(!studentProfile)
-            return handleError('Invalid Student Profile Id');
+    async allocatePayment(dto: CreatePaymentDto, session?: ClientSession) {
+        const studentProfile = await this.studentProfileModel.findById(dto.studentProfileId, null, { session });
+        if (!studentProfile)
+            throw new Error('Invalid Student Profile Id');
+
         const payment = new this.paymentModel(dto);
-        const savedPayment = await payment.save();
-        if(!savedPayment) {
-            return handleError('Failed to allocate payment');
-        }
-        return handleResponse(savedPayment, 'Payment allocated successfully');
+        const savedPayment = await payment.save({ session });
+
+        if (!savedPayment)
+            throw new Error('Failed to allocate payment');
+
+        return { data: savedPayment, message: 'Payment allocated successfully' };
     }
+
 
     async updatePayment(paymentId: string, dto: Partial<CreatePaymentDto>) {
         const updatedPayment = await this.paymentModel.findByIdAndUpdate(paymentId, dto, { new: true });

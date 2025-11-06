@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import * as mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import { User } from './user.schema';
 import { applyDefaultToJSON } from 'src/utils/schema-transformer.utils';
 import { Hostel } from './hostel.schema';
@@ -44,11 +45,17 @@ export class StudentProfile {
   @Prop({default: null})
   mailId: string;
   
-  @Prop({type: mongoose.Schema.Types.ObjectId, ref: Hostel.name})
+  @Prop({type: Types.ObjectId, ref: Hostel.name})
   hostel: Hostel;
+
+  @Prop({ default: false})
+  physicallyChallenged: Boolean; 
   
   @Prop({default: null})
   registerNo:string;
+
+  @Prop({default: false})
+  passOut: boolean;
 }
 
 export const StudentProfileSchema = SchemaFactory.createForClass(StudentProfile);
