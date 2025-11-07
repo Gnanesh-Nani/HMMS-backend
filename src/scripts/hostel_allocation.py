@@ -2,6 +2,10 @@ import requests
 import sys
 import json
 from datetime import datetime
+import numpy as np
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+import math
 
 # ---------------------- CONFIG -----------------------
 BASE_URL = "http://localhost:3001"
@@ -170,8 +174,137 @@ class HostelAllocationSystem:
             print(f"⚠️ Error parsing time {t}: {e}")
             return 0
 
+    def find_strongly_connected_components(self, students):
+        """Find strongly connected components (friend groups) using DFS"""
+        print("🔍 Finding strongly connected components (friend groups)...")
+        
+        # Build adjacency list
+        graph = {}
+        student_id_map = {}
+        
+        for student in students:
+            student_id = student["id"]
+            student_id_map[student_id] = student
+            graph[student_id] = []
+            
+            # Add preferred roommates as directed edges
+            for friend_id in student.get("preferedRoomMates", []):
+                if friend_id in student_id_map:  # Only add if friend exists in dataset
+                    graph[student_id].append(friend_id)
+        
+        # Kosaraju's algorithm for strongly connected components
+        visited = set()
+        stack = []
+        components = []
+        
+        # First DFS pass
+        def dfs_first(node):
+            visited.add(node)
+            for neighbor in graph.get(node, []):
+                if neighbor not in visited:
+                    dfs_first(neighbor)
+            stack.append(node)
+        
+        for student_id in graph:
+            if student_id not in visited:
+                dfs_first(student_id)
+        
+        # Build reversed graph
+        reversed_graph = {}
+        for node in graph:
+            reversed_graph[node] = []
+        
+        for node in graph:
+            for neighbor in graph[node]:
+                reversed_graph[neighbor].append(node)
+        
+        # Second DFS pass on reversed graph
+        visited.clear()
+        
+        def dfs_second(node, component):
+            visited.add(node)
+            component.append(student_id_map[node])
+            for neighbor in reversed_graph.get(node, []):
+                if neighbor not in visited:
+                    dfs_second(neighbor, component)
+        
+        while stack:
+            node = stack.pop()
+            if node not in visited:
+                component = []
+                dfs_second(node, component)
+                if len(component) > 1:  # Only consider components with at least 2 students
+                    components.append(component)
+        
+        print(f"🔍 Found {len(components)} strongly connected components")
+        for i, component in enumerate(components):
+            print(f"  Component {i+1}: {[s['name'] for s in component]}")
+        
+        return components
+
+    def prepare_features_for_clustering(self, students):
+        """Prepare features for K-means clustering"""
+        features = []
+        
+        for student in students:
+            # Convert categorical features to numerical
+            wakeup_time = self.time_to_minutes(student.get("wakeupTime", "00:00:00"))
+            sleep_time = self.time_to_minutes(student.get("sleepTime", "00:00:00"))
+            
+            # Study habit encoding
+            study_habit_map = {"individual-study": 0, "group-study": 1, "flexible": 2}
+            study_habit = study_habit_map.get(student.get("studyHabit", "flexible"), 2)
+            
+            # Department encoding (simplified)
+            department = hash(student.get("department", "")) % 10  # Simple hash for department
+            
+            # Year
+            year = student.get("year", 1)
+            
+            feature_vector = [
+                wakeup_time,
+                sleep_time,
+                study_habit,
+                department,
+                year
+            ]
+            features.append(feature_vector)
+        
+        return np.array(features)
+
+    def cluster_students_kmeans(self, students, n_clusters=None):
+        """Cluster students using K-means"""
+        if len(students) == 0:
+            return []
+        
+        if n_clusters is None:
+            # Determine optimal number of clusters
+            n_clusters = min(len(students), max(2, len(students) // 2))
+        
+        print(f"🎯 Clustering {len(students)} students into {n_clusters} clusters using K-means...")
+        
+        # Prepare features
+        features = self.prepare_features_for_clustering(students)
+        
+        # Standardize features
+        scaler = StandardScaler()
+        features_scaled = scaler.fit_transform(features)
+        
+        # Apply K-means
+        kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+        clusters = kmeans.fit_predict(features_scaled)
+        
+        # Group students by cluster
+        clustered_students = [[] for _ in range(n_clusters)]
+        for i, cluster_id in enumerate(clusters):
+            clustered_students[cluster_id].append(students[i])
+        
+        print(f"✅ Clustering completed. Cluster sizes: {[len(cluster) for cluster in clustered_students]}")
+        
+        return clustered_students
+
     def allocate_rooms(self, students, rooms, hostel_id):
-        """Enhanced allocation algorithm"""
+        """Enhanced allocation algorithm with SCC and K-means"""
         print(f"🎯 Starting allocation for {len(students)} students across {len(rooms)} rooms")
         
         # Pre-process student data
@@ -198,7 +331,7 @@ class HostelAllocationSystem:
         
         print(f"🏢 Rooms: {len(ground_rooms)} ground floor, {len(other_rooms)} other floors")
 
-        # Allocate physically challenged students to ground floor first
+        # STEP 1: Allocate physically challenged students to ground floor first
         for student in physically_challenged:
             allocated = False
             for room in ground_rooms:
@@ -242,39 +375,31 @@ class HostelAllocationSystem:
                 unallocated.append(student["name"])
                 print(f"❌ Could not allocate physically challenged student: {student['name']}")
 
-        # Build friend groups for normal students
-        student_id_map = {s["id"]: s for s in normal_students}
-        allocated_students = set()
-        friend_groups = []
-
-        for student in normal_students:
-            if student["id"] in allocated_students:
+        # STEP 2: Find and allocate strongly connected components (friend groups)
+        scc_groups = self.find_strongly_connected_components(normal_students)
+        
+        # Track allocated students
+        allocated_student_ids = set()
+        for result in allocation_results:
+            allocated_student_ids.add(result["studentId"])
+        
+        # Allocate SCC groups
+        for group in scc_groups:
+            # Filter out already allocated students
+            available_group = [s for s in group if s["id"] not in allocated_student_ids]
+            
+            if len(available_group) == 0:
                 continue
-
-            # Create a friend group starting with this student
-            friend_group = [student]
-            allocated_students.add(student["id"])
-
-            # Add preferred roommates
-            for friend_id in student["preferedRoomMates"]:
-                if friend_id in student_id_map and friend_id not in allocated_students:
-                    friend_group.append(student_id_map[friend_id])
-                    allocated_students.add(friend_id)
-
-            friend_groups.append(friend_group)
-
-        print(f"👥 Formed {len(friend_groups)} friend groups")
-
-        # Allocate friend groups to rooms
-        for group in friend_groups:
+                
             group_allocated = False
             
             # Try to allocate entire group to the same room
             for room in other_rooms:
                 available_capacity = self.get_available_capacity(room)
-                if available_capacity >= len(group):
+                if available_capacity >= len(available_group):
                     # Allocate entire group to this room
-                    for student in group:
+                    all_allocated = True
+                    for student in available_group:
                         success = self.allocate_student_to_room(room["id"], student["id"], hostel_id)
                         if success:
                             allocation_results.append({
@@ -286,13 +411,18 @@ class HostelAllocationSystem:
                                 "floor": room["floorNo"]
                             })
                             room["currentStudents"] = room.get("currentStudents", []) + [student["id"]]
-                    group_allocated = True
-                    print(f"👥 Allocated friend group of {len(group)} students to room {room['roomNo']}")
-                    break
+                            allocated_student_ids.add(student["id"])
+                        else:
+                            all_allocated = False
+                    
+                    if all_allocated:
+                        group_allocated = True
+                        print(f"👥 Allocated SCC group of {len(available_group)} students to room {room['roomNo']}")
+                        break
 
             if not group_allocated:
-                # Allocate group members to different rooms if needed
-                for student in group:
+                # Allocate group members individually if whole group can't be allocated together
+                for student in available_group:
                     student_allocated = False
                     for room in other_rooms:
                         if self.get_available_capacity(room) > 0:
@@ -307,13 +437,52 @@ class HostelAllocationSystem:
                                     "floor": room["floorNo"]
                                 })
                                 room["currentStudents"] = room.get("currentStudents", []) + [student["id"]]
+                                allocated_student_ids.add(student["id"])
                                 student_allocated = True
-                                print(f"👤 Allocated student {student['name']} to room {room['roomNo']}")
+                                print(f"👤 Allocated SCC student {student['name']} to room {room['roomNo']}")
                                 break
                     
                     if not student_allocated:
                         unallocated.append(student["name"])
-                        print(f"❌ Could not allocate student: {student['name']}")
+                        print(f"❌ Could not allocate SCC student: {student['name']}")
+
+        # STEP 3: Cluster remaining students using K-means and allocate
+        remaining_students = [s for s in normal_students if s["id"] not in allocated_student_ids]
+        
+        if remaining_students:
+            print(f"🎯 Clustering {len(remaining_students)} remaining students using K-means...")
+            
+            # Cluster remaining students
+            student_clusters = self.cluster_students_kmeans(remaining_students)
+            
+            # Allocate clustered students
+            for cluster in student_clusters:
+                for student in cluster:
+                    if student["id"] in allocated_student_ids:
+                        continue
+                        
+                    student_allocated = False
+                    for room in other_rooms:
+                        if self.get_available_capacity(room) > 0:
+                            success = self.allocate_student_to_room(room["id"], student["id"], hostel_id)
+                            if success:
+                                allocation_results.append({
+                                    "student": student["name"],
+                                    "studentId": student["id"],
+                                    "registerNumber": student["registerNumber"],
+                                    "roomNo": room["roomNo"],
+                                    "block": room["blockName"],
+                                    "floor": room["floorNo"]
+                                })
+                                room["currentStudents"] = room.get("currentStudents", []) + [student["id"]]
+                                allocated_student_ids.add(student["id"])
+                                student_allocated = True
+                                print(f"🎯 Allocated K-means clustered student {student['name']} to room {room['roomNo']}")
+                                break
+                    
+                    if not student_allocated:
+                        unallocated.append(student["name"])
+                        print(f"❌ Could not allocate clustered student: {student['name']}")
 
         print(f"📊 Allocation summary: {len(allocation_results)} allocated, {len(unallocated)} unallocated")
         return allocation_results, unallocated
