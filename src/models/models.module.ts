@@ -27,6 +27,9 @@ import { MassMovement, MassMovementSchema } from './schemas/mass-movement.schema
 import { StudentPreference, StudentPreferenceSchema } from './schemas/student-preference.schema';
 import { MassMovementService } from './services/admin/mass-movement.service';
 import { PaymentService } from './services/payment.service';
+import { Ticket, TicketSchema } from './schemas/ticket.schema';
+import { Conversation, ConversationSchema } from './schemas/conversation.schema';
+import { TicketService } from './services/ticket.service';
 
 
 @Module({
@@ -42,16 +45,19 @@ import { PaymentService } from './services/payment.service';
                                 { name: Transaction.name, schema: TransactionSchema},
                                 { name: NoDue.name,schema: NoDueSchema},
                                 { name: MassMovement.name,schema: MassMovementSchema},
-                                { name: StudentPreference.name, schema: StudentPreferenceSchema}
+                                { name: StudentPreference.name, schema: StudentPreferenceSchema},
+                                { name: Ticket.name, schema: TicketSchema},
+                                { name: Conversation.name, schema: ConversationSchema}
                               ]),
   ],
-  providers: [AuthService,RegisterService,JwtService,HostelService,BlockService,RoomService,MealPlanService,StudentService,MailService,OtpService,StripeService,TransactionsService,NoDueService,MassMovementService,PaymentService],
+  providers: [AuthService,RegisterService,JwtService,HostelService,BlockService,RoomService,MealPlanService,StudentService,MailService,OtpService,StripeService,TransactionsService,NoDueService,MassMovementService,PaymentService,TicketService],
   exports: [AuthService, 
     MongooseModule,
     RegisterService,
     MailService,
     PaymentService,
-    MassMovementService
+    MassMovementService,
+    TicketService,
   ],
 })
 export class ModelsModule {}

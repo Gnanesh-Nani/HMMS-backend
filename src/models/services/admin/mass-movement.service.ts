@@ -81,7 +81,6 @@ export class MassMovementService {
             let completedNoOfPayments = 0;
             const hostelsPaymentPercentage: HostelPaymentPercentage[] = [];
 
-            // Iterate through each hostel
             for (let i = 1; i < hostels.length; i++) {
                 const currentHostelId = hostels[i];
 
@@ -100,15 +99,12 @@ export class MassMovementService {
                     completedNoOfPayments: completedNoOfPaymentsHostel,
                 });
 
-                // Update global totals
                 totalNoOfPayments += totalNoOfPaymentsHostel;
                 completedNoOfPayments += completedNoOfPaymentsHostel;
             }
 
-            // Commit the transaction
             await session.commitTransaction();
 
-            // Calculate overall percentage
             const overallCompletionPercentage =
                 totalNoOfPayments === 0
                     ? 0
@@ -133,8 +129,6 @@ export class MassMovementService {
     }
 
     async createMassMovement(body: CreateMassMovementDto) {
-        // if(true)
-        //     return body;
         const currentDate = new Date();
         const dueDate = new Date(currentDate);
         dueDate.setDate(currentDate.getDate() + 15);
