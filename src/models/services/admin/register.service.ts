@@ -41,7 +41,8 @@ export class RegisterService {
             year: body.year,
             gender: body.gender,
             department: body.department,
-            mailId: body.mailId
+            mailId: body.mailId,
+            registerNo: body.registerNo
         });
 
         await newStudentProfile.save();
@@ -88,7 +89,7 @@ export class RegisterService {
         const result: { success: number, failed : {registerNo:string,message:string}[] } = { success: 0, failed: [] };
 
         for (const row of rows) {
-            const { registerNo, name, password, year, gender, department , mailId} = row;
+            const { registerNo, name, password, year, gender, department , mailId, physicallyChallenged } = row;
             try {
                 const existing = await this.userModel.findOne({ registerNo: registerNo });
                 if (existing) {
@@ -111,7 +112,9 @@ export class RegisterService {
                     gender,
                     department,
                     year: parseInt(year, 10),
-                    mailId
+                    mailId,
+                    registerNo: registerNo,
+                    physicallyChallenged: physicallyChallenged==="true"
                 });
 
                 await profile.save();

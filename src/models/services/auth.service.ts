@@ -31,7 +31,8 @@ export class AuthService {
         if (!isMatch) {
             return { error: true, message: 'Invalid Password' };
         }
-        const isFirstLogin = user.isFirstLogin;
+        // const isFirstLogin = user.isFirstLogin;
+        const isFirstLogin = false;
         if(user.isFirstLogin) {
             user.isFirstLogin = false;
             await user.save();

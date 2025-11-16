@@ -1,4 +1,5 @@
 import { Body, Controller, Delete, Get, Inject, Param, Patch, Post } from '@nestjs/common';
+import { CreateStudentPreferenceDto } from 'src/models/dtos/create-student-preference.dto';
 import { CreateStudentProfileDto } from 'src/models/dtos/create-student-profile.dto';
 import { StudentService } from 'src/models/services/student/student.service';
 
@@ -40,5 +41,19 @@ export class StudentsController {
         return this.studentService.deleteStudentProfile(id);
     }
 
+    @Get('preference/:studentProfileId')
+    getStudentPreference(@Param('studentProfileId') id:string) {
+        return this.studentService.getStudentPreferenceById(id);
+    }
+
+    @Post('preference')
+    createStudentPreference(@Body() body: CreateStudentPreferenceDto) {
+        return this.studentService.createStudentPreference(body);
+    }
+
+    @Patch('preference/:studentProfileId')
+    updateStudentPreference(@Param('studentProfileId') id:string,@Body() body: Partial<CreateStudentPreferenceDto>) {
+        return this.studentService.updateStudentPreference(id,body);
+    }
 
 }

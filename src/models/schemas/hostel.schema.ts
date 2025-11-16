@@ -30,6 +30,9 @@ export class Hostel extends Document{
     
     @Prop({type:mongoose.Schema.Types.ObjectId,ref: MealPlan.name ,required:true})
     mealPlan: MealPlan
+
+    @Prop({default: 0})
+    hostelFee: number;
 }
 
 export const HostelSchema = SchemaFactory.createForClass(Hostel)

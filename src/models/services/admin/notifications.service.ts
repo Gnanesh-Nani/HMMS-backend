@@ -3,13 +3,15 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { CreateNotificationDto } from "src/models/dtos/create-notification.dto";
 import { Notification, NotificationDocument, NotificationType } from "src/models/schemas/notification.schema";
+import { StudentProfile, StudentProfileDocument } from "src/models/schemas/student-profile.schema";
 import { handleError } from "src/utils/handle-error";
 import { handleResponse } from "src/utils/response.utils";
 
 @Injectable()
 export class NotificationService {
     constructor(
-        @InjectModel(Notification.name) private readonly notificationModel: Model<NotificationDocument>
+        @InjectModel(Notification.name) private readonly notificationModel: Model<NotificationDocument>,
+        @InjectModel(StudentProfile.name) private readonly studentProfileModel: Model<StudentProfileDocument>
     ){}
 
     async getAllNotificaiton(){
@@ -32,6 +34,27 @@ export class NotificationService {
             return handleError("No notifications found for the given Id");
 
         return handleResponse(notification,"Notification Retrived Sucessfully");
+    }
+
+    
+    async getMyNotifications(studentProfileId: string) {
+        const studentProfile = await this.studentProfileModel.findById(studentProfileId);
+        if (!studentProfile) {
+            return handleError("Invalid Student Profile Id");
+        }
+        
+        const gender = (studentProfile.gender === "male") ? "boys" : "girls";
+        const hostelId = studentProfile.hostel;
+        
+        const notifications = await this.notificationModel.find({
+            $or: [
+                { type: 'global' }, 
+                { type: 'gender', gender: gender },
+                { type: 'hostel', hostelId: hostelId }
+            ]
+        }).sort({ createdAt: -1 }); 
+        
+        return handleResponse(notifications, "Notifications Retrieved Successfully");
     }
 
     async createNotification(createNotficationDto:CreateNotificationDto) {

@@ -21,7 +21,7 @@ export class Room {
     floorNo: number;
 
     @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref:StudentProfile.name }], default: [] })
-    currentStudents: StudentProfile[];
+    currentStudents: mongoose.Schema.Types.ObjectId[];
 
 }
 

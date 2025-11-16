@@ -1,6 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { ClientSession } from "mongoose";
 import { Model } from "mongoose";
+import { retry } from "rxjs";
 import { CreateRoomDto } from "src/models/dtos/create-room-dto";
 import { Block, BlockDocument } from "src/models/schemas/block.schema";
 import { Room, RoomDocument } from "src/models/schemas/room.schema";
@@ -97,59 +99,87 @@ export class RoomService {
         return handleResponse({},"Room Deleted Sucessfully")
     }
 
-    async allocateStudent(roomId:string,studentId:string,hostelId: string){
-        const room = await this.roomModel.findById(roomId);
-        if(!room)
-            return handleError("No room found for this Id to allocat")
+    async allocateStudentByRegisterNo(roomId: string,registerNo: string,hostelId: string){
+        try {
+            const studentProfile = await this.studentProfileModel.findOne({registerNo});
+            if(!studentProfile)
+                return handleError("No student found with the given register no")
+            return await this.allocateStudent(roomId,studentProfile.id,hostelId);
+        }catch(err){
+            Logger.debug("Error Allocating the student");
+        }
+        return handleError("Failed to allocate studented");
+    }
 
-        if(room.currentStudents.length == room.maxCapacity)
-            return handleError("Room Reached its Maximum Capacity");
-        
-        const student = await this.studentProfileModel.findById(studentId);
-        if(!student)
-            return handleError("No student found for this Id to allocate")
+    async allocateStudent(roomId: string, studentId: string, hostelId: string, session?: ClientSession) {
+        const room = await this.roomModel.findById(roomId, null, { session });
+        if (!room)
+            throw new Error("No room found for this Id to allocate");
 
-        if(student.hostel)
-           return handleError("This Student is already allocated in another room")
+        if (room.currentStudents.length >= room.maxCapacity)
+            throw new Error("Room has reached its maximum capacity");
 
+        const student = await this.studentProfileModel.findById(studentId, null, { session });
+        if (!student)
+            throw new Error("No student found for this Id to allocate");
+
+        if (student.hostel)
+            throw new Error("This student is already allocated in another room");
 
         const studentExists = room.currentStudents.some(
             (id: any) => id.toString() === studentId
         );
 
-        if (studentExists) {
-            return handleError("This Student is already allocated to this room");
-        }
-        await this.roomModel.findByIdAndUpdate(
-            roomId, {$addToSet:{ currentStudents: studentId }}
-        );
-        await this.studentProfileModel.findByIdAndUpdate(studentId,{hostel:hostelId});
-        return handleResponse({},"students inserted Sucessfully")
-    }
-    
-    
-    async removeStudent(roomId:string,studentId:string){
-        const room = await this.roomModel.findById(roomId);
-        if(!room)
-            return handleError("No room found for this Id to allocat")
+        if (studentExists)
+            throw new Error("This student is already allocated to this room");
 
-        const student = await this.studentProfileModel.findById(studentId);
-        if(!student)
-            return handleError("No student found for this Id to allocate")
+        await this.roomModel.findByIdAndUpdate(
+            roomId,
+            { $addToSet: { currentStudents: studentId } },
+            { session }
+        );
+
+        await this.studentProfileModel.findByIdAndUpdate(
+            studentId,
+            { hostel: hostelId },
+            { session }
+        );
+
+        return { message: "Student allocated successfully" };
+    }
+
+
+
+    async removeStudent(roomId: string, studentId: string, session?: ClientSession) {
+        const room = await this.roomModel.findById(roomId, null, { session });
+        if (!room)
+            throw new Error("No room found for this Id to remove");
+
+        const student = await this.studentProfileModel.findById(studentId, null, { session });
+        if (!student)
+            throw new Error("No student found for this Id to remove");
 
         const studentExists = room.currentStudents.some(
             (id: any) => id.toString() === studentId
         );
 
-        if (!studentExists) {
-            return handleError("Student is not allocated to this room");
-        }
-        
+        if (!studentExists)
+            throw new Error("Student is not allocated to this room");
+
         await this.roomModel.findByIdAndUpdate(
-            roomId, {$pull:{ currentStudents: studentId }}
+            roomId,
+            { $pull: { currentStudents: studentId } },
+            { session }
         );
-        await this.studentProfileModel.findByIdAndUpdate(studentId,{hostel:null});
-        return handleResponse({},"students removed Sucessfully")
+
+        await this.studentProfileModel.findByIdAndUpdate(
+            studentId,
+            { hostel: null },
+            { session }
+        );
+
+        return { message: "Student removed successfully" };
     }
+
 
 }
