@@ -39,7 +39,7 @@ export class TicketService {
             const conversation = new this.conversationModel();
             const savedConversation = await conversation.save({session}); 
             const ticket = new this.ticketModel({ conversation: savedConversation.id , ...ticketData});
-            await this.sendMessage(createTicketDto.studentProfile,conversation.id,firstMessage);
+            // await this.sendMessage(createTicketDto.studentProfile,conversation.id,firstMessage);
             const savedTicket = await ticket.save({session});
             await session.commitTransaction();
             return handleResponse(savedTicket, "Ticked Created Sucessfully");
@@ -71,12 +71,18 @@ export class TicketService {
         }
     }
 
-    async sendMessage(senderId: string, conversationId: string, message: string) {
+    async sendMessage(senderId: string, ticketId: string, message: string) {
         const session = await this.connection.startSession();
         session.startTransaction()
         try {
-            const convo = await this.conversationModel.findById(conversationId)
-            await this.conversationModel.findByIdAndUpdate(conversationId,{$push:{messages:{sender:senderId,text:message}}});
+            const ticket = await this.ticketModel.findById(ticketId);
+            if(!ticket)
+                return handleError("No ticket found for this id");
+
+            const convo = await this.conversationModel.findById(ticket.conversation)
+            if(!convo)
+                return handleError("No Conversation found for this Id");
+            await this.conversationModel.findByIdAndUpdate(convo.id,{$push:{messages:{sender:senderId,text:message}}});
             await session.commitTransaction();
             return handleResponse("Sucessfully send message")
         }catch(err) {
@@ -84,6 +90,18 @@ export class TicketService {
             return handleError(err.message)
         } finally {
             session.endSession()
+        }
+    }
+
+    async getTicketByStudentId(studentProfileId: string) {
+        try {
+            const tickets = await this.ticketModel.find({ studentProfile: studentProfileId }).populate('conversation');
+            if (tickets.length == 0)
+                return handleError("No tickets were found for this student!");
+            return handleResponse(tickets, "Tickets Retrieved Successfully");
+        } catch (err) {
+            console.error('Error getting tickets by student ID:', err);
+            return handleError(err.message);
         }
     }
 }
