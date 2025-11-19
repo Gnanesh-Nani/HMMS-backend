@@ -31,4 +31,9 @@ export class TicketController {
     sendMessage(@Param('conversationId') conversationId: string, @Body() messageDto:{senderId:string,message: string}) {
         return this.ticketService.sendMessage(messageDto.senderId,conversationId,messageDto.message);
     }
+
+    @Get('/me/:studentProfileId')
+    getTicketByStudentProfileId(@Param('studentProfileId') studentProfileId: string) {
+        return this.ticketService.getTicketByStudentId(studentProfileId);
+    }
 }
